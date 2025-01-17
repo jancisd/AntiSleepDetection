@@ -67,10 +67,9 @@ while True:
         r_eye = r_eye / 255.0
         r_eye = r_eye.reshape(1, 24, 24, 1)
 
-        # Debug output
+        
         model_output = model(r_eye)
         
-
         rpred = np.argmax(model_output['output_0'].numpy(), axis=-1)
         
         break
@@ -82,9 +81,8 @@ while True:
         l_eye = l_eye / 255.0
         l_eye = l_eye.reshape(1, 24, 24, 1)
 
-        # Debug output
-        model_output = model(l_eye)
         
+        model_output = model(l_eye)
 
         lpred = np.argmax(model_output['output_0'].numpy(), axis=-1)
         
