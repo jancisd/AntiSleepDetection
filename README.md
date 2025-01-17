@@ -8,7 +8,7 @@ AntiSleepDetection is a real-time drowsiness detection system that uses computer
 - Real-time face and eye detection using OpenCV.
 - Deep learning-based eye state classification (open or closed).
 - Alarm system to alert the user in case of drowsiness.
-- Lightweight and runs efficiently on most systems.
+
 
 ---
 
@@ -19,3 +19,5 @@ AntiSleepDetection is a real-time drowsiness detection system that uses computer
 4. If both eyes remain closed for a threshold period, an alarm is triggered.
 
 ---
+
+
