@@ -6,20 +6,28 @@ import numpy as np
 from pygame import mixer
 import time
 
-# Initialize sound mixer
-mixer.init()
-sound = mixer.Sound('alarm.wav')
+# Define relative paths dynamically
+BASE_DIR = os.path.dirname(__file__)
+HAAR_DIR = os.path.join(BASE_DIR, 'haar-cascade-files')
+MODEL_DIR = os.path.join(BASE_DIR, 'models')
+ALARM_PATH = os.path.join(BASE_DIR, 'alarm.wav')
 
-# Paths to Haar Cascade files
-face_cascade_path = '/Users/jancisdelfin/Desktop/project1/Drowsiness_detection/haar-cascade-files/haarcascade_frontalface_alt.xml'
-leye_cascade_path = '/Users/jancisdelfin/Desktop/project1/Drowsiness_detection/haar-cascade-files/haarcascade_lefteye_2splits.xml'
-reye_cascade_path = '/Users/jancisdelfin/Desktop/project1/Drowsiness_detection/haar-cascade-files/haarcascade_righteye_2splits.xml'
+# Haar Cascade file paths
+face_cascade_path = os.path.join(HAAR_DIR, 'haarcascade_frontalface_alt.xml')
+leye_cascade_path = os.path.join(HAAR_DIR, 'haarcascade_lefteye_2splits.xml')
+reye_cascade_path = os.path.join(HAAR_DIR, 'haarcascade_righteye_2splits.xml')
 
-# Validate file paths
-for path in [face_cascade_path, leye_cascade_path, reye_cascade_path, 'alarm.wav']:
+# Validate required file paths
+required_files = [face_cascade_path, leye_cascade_path, reye_cascade_path, ALARM_PATH]
+for path in required_files:
     if not os.path.exists(path):
         print(f"File not found: {path}")
+        print("Ensure all required files are placed in their respective directories.")
         exit()
+
+# Initialize sound mixer and load alarm
+mixer.init()
+sound = mixer.Sound(ALARM_PATH)
 
 # Load Haar Cascades
 face = cv2.CascadeClassifier(face_cascade_path)
@@ -27,7 +35,8 @@ leye = cv2.CascadeClassifier(leye_cascade_path)
 reye = cv2.CascadeClassifier(reye_cascade_path)
 
 # Load the TensorFlow SavedModel using TFSMLayer
-model = TFSMLayer('models/cnnCat2_saved_model', call_endpoint='serving_default')
+model_path = os.path.join(MODEL_DIR, 'cnnCat2_saved_model')
+model = TFSMLayer(model_path, call_endpoint='serving_default')
 
 # Webcam setup
 cap = cv2.VideoCapture(0)
@@ -51,33 +60,34 @@ while True:
 
     cv2.rectangle(frame, (0, height - 50), (200, height), (0, 0, 0), thickness=cv2.FILLED)
 
+    # Predict right eye state
     for (x, y, w, h) in right_eye:
         r_eye = gray[y:y + h, x:x + w]
         r_eye = cv2.resize(r_eye, (24, 24))
         r_eye = r_eye / 255.0
         r_eye = r_eye.reshape(1, 24, 24, 1)
-        
+
         # Debug output
         model_output = model(r_eye)
-        print("Model output (right eye):", model_output)
         
-        rpred = np.argmax(model_output['output_0'].numpy(), axis=-1)  # Update key if needed
-        print("Right eye prediction:", rpred)
+
+        rpred = np.argmax(model_output['output_0'].numpy(), axis=-1)
+        
         break
 
-    # Detect left eye
+    # Predict left eye state
     for (x, y, w, h) in left_eye:
         l_eye = gray[y:y + h, x:x + w]
         l_eye = cv2.resize(l_eye, (24, 24))
         l_eye = l_eye / 255.0
         l_eye = l_eye.reshape(1, 24, 24, 1)
-        
+
         # Debug output
         model_output = model(l_eye)
-        print("Model output (left eye):", model_output)
         
-        lpred = np.argmax(model_output['output_0'].numpy(), axis=-1)  # Update key if needed
-        print("Left eye prediction:", lpred)
+
+        lpred = np.argmax(model_output['output_0'].numpy(), axis=-1)
+        
         break
 
     # Drowsiness detection logic
@@ -92,7 +102,7 @@ while True:
 
     # Trigger alarm if score exceeds threshold
     if score > 15:
-        cv2.imwrite(os.path.join(os.getcwd(), 'image.jpg'), frame)
+        cv2.imwrite(os.path.join(BASE_DIR, 'image.jpg'), frame)
         try:
             if not mixer.get_busy():
                 sound.play()
