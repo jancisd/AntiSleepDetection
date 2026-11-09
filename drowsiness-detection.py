@@ -113,7 +113,17 @@ while True:
 
     cv2.imshow('Drowsiness Detection', frame)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    key = cv2.waitKey(1) & 0xFF
+
+    # Exit when Q is pressed
+    if key == ord('q'):
+        break
+
+    # Exit when the window is closed
+    if cv2.getWindowProperty(
+        'Drowsiness Detection',
+        cv2.WND_PROP_VISIBLE
+    ) < 1:
         break
 
 cap.release()
